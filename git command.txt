@@ -1,0 +1,18 @@
+1.创建版本库
+git init：创建一个仓库
+git clone <url>克隆一个仓库
+
+2.添加修改
+git add <file> 添加文件到git仓库，
+git commit -m "message" 提交修改
+
+3.查看仓库修改状况
+git status 查看仓库修改状况
+git diff <file> 查看具体修改内容
+
+4.版本回退
+git log 查看版本日志，以便选择回退到哪个版本
+git reflog 查看输入命令的id
+git reset --hard HEAD^ 回退到上一个版本
+	（HEAD^ 上一个，HEAD^^上上一个，HEAD^3 上三个）
+git reset --hard <id> 回退到指定版本
