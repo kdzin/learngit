@@ -1,10 +1,15 @@
+0名词
+1.工作区（Working Directory）：即电脑中的project文件夹，里面包含了.git文件夹
+2.版本库（Repository）：.git文件夹
+3.暂存区（stage）：版本库中包含的一个区域，当git add 将文件修改暂存到 这个stage
+
 1.创建版本库
 git init：创建一个仓库
-git clone <url>克隆一个仓库
+
 
 2.添加修改
-git add <file> 添加文件到git仓库，
-git commit -m "message" 提交修改
+git add <file> 新增/添加修改（将修改保存到暂存区）
+git commit -m "message" 提交修改（将暂存区的修改正式保存）
 
 3.查看仓库修改状况
 git status 查看仓库修改状况
@@ -16,3 +21,46 @@ git reflog 查看输入命令的id
 git reset --hard HEAD^ 回退到上一个版本
 	（HEAD^ 上一个，HEAD^^上上一个，HEAD^3 上三个）
 git reset --hard <id> 回退到指定版本
+
+x.撤销修改
+case 1：修改了但是未添加到暂存区(git add) （如码了内容又删掉，文件没变，但是git中产生了记录）：
+	git checkout --<file> 恢复到最近一次git commit或git add时的状态（用版本库里的版本替换工作区的版本）。
+case 2：修改了并且git add但是未git commit: 先用git reset HEAD <file> 将暂存区的修改回退到工作区，
+	此时变成case 1 ，再按case的操作即可撤销
+case 3：修改了并且git add 并且git commit： 直接版本回退啦
+case 4：修改并add commit 并且push到远程库： I'm sorry
+
+(删除文件
+git rm <file> git commit
+在工作区中手动删除了文件的恢复:git checkout -- <file>)
+
+-------------------------------------------------------------------------------------
+
+远程库 github
+*本地Git仓库和GitHub仓库之间的传输是通过SSH加密的，需先配置 ssh key
+
+1.添加到远程库
+先关联：$ git remote add origin git@github.com:<githubaccount>/<projectname>.git  
+然后push：$ git push -u origin master（第一次推送master分支的所有内容，之后git push origin master）		
+	
+(远程库的名字就是origin，这是Git默认的叫法，也可以改成别的，但是origin这个名字一看就知道是远程库)
+
+2.从远程库克隆
+$ git clone git@github.com:accountname/projectname.git
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
