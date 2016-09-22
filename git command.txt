@@ -55,7 +55,8 @@ $ git clone git@github.com:accountname/projectname.git
 新建分支：git branch <branchname>
 切换到分支：git checkout <branchname>
 （新建并切换分支）：git checkout -b <branchname>
-合并某分支到当前分支：git merge <name>
+合并某分支到当前分支：git merge <name> （删除分支后，会丢掉分支信息）
+合并某分支到当前分支：git merge --no-ff -m "<message>" <branchname> 普通模式
 删除分支：git branch -d <name>
 
 4.解决分支冲突
