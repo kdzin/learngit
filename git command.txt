@@ -16,7 +16,8 @@ git status 查看仓库修改状况
 git diff <file> 查看具体修改内容
 
 4.版本回退
-git log 查看版本日志，以便选择回退到哪个版本
+git log 查看版本日志，以便选择回退到哪个版本 (git log --graph命令可以看到分支合并图。
+	$ git log --graph --pretty=oneline --abbrev-commit)
 git reflog 查看输入命令的id
 git reset --hard HEAD^ 回退到上一个版本
 	（HEAD^ 上一个，HEAD^^上上一个，HEAD^3 上三个）
@@ -57,15 +58,99 @@ $ git clone git@github.com:accountname/projectname.git
 合并某分支到当前分支：git merge <name>
 删除分支：git branch -d <name>
 
+4.解决分支冲突
+当两条分支对同一个文件的同一个文本块进行了不同的修改，并试图合并时，
+Git不能自动合并的，称之为冲突(conflict)。解决冲突需要人工处理,如
+
+"<<<<<<< HEAD
+Creating a new branch is quick & simple.
+=======
+Creating a new branch is quick AND simple.
+>>>>>>> feature1"
+
+符号含义：
+<<<<<<<标记冲突开始，后面跟的是当前分支中的内容。HEAD指向当前分支末梢的提交。
+
+=======之后，>>>>>>>之前是要merge过来的另一条分支上的代码。>>>>>>>之后的dev是该分支的名字。
+
+对于简单的合并，手工编辑，然后去掉这些标记，最后像往常的提交一样先add再commit即可。
 
 
+--------------------------notes----------------------------------
+
+x.分支管理策略
+*在实际开发中，我们应该按照几个基本原则进行分支管理：
+首先，master分支应该是非常稳定的，也就是仅用来发布新版本，平时不能在上面干活；
+那在哪干活呢？干活都在dev分支上，也就是说，dev分支是不稳定的，到某个时候，比如1.0版本发布时，
+再把dev分支合并到master上，在master分支发布1.0版本；
+你和你的小伙伴们每个人都在dev分支上干活，每个人都有自己的分支，时不时地往dev分支上合并就可以了
+
+*通常，合并分支时，如果可能，Git会用Fast forward模式，但这种模式下，删除分支后，会丢掉分支信息。
+如果要强制禁用Fast forward模式，Git就会在merge时生成一个新的commit，这样，从分支历史上就可以看出分支信息。
+$ git merge --no-ff -m "<message>" <branchname> :普通模式合并，合并后的历史有分支，能看出来曾经做过合并，
+	而fast forward合并就看不出来曾经做过合并
+
+x.bug分支和feature分支
+修复bug时，我们会通过创建新的bug分支进行修复，然后合并，最后删除；
+当手头工作没有完成时，先把(当前分支，如dev的)工作现场git stash一下，
+然后（在想要修复bug分支，如master上创建临时分支issue-101并 ）修复bug，
+修复后（切换到master分支，并完成合并最后删除issue-101分支），再（切换到dev分支恢复）git stash pop，回到工作现场。
+
+保存当前工作内容：git stash：当前工作现场“储藏”起来，等以后恢复现场后继续工作（代码完成一半，并不想commit）
+查看stash 列表:git stash list：
+恢复工作内容: git stash apply恢复，但是恢复后，stash内容并不删除，你需要用git stash drop来删除；
+	git stash pop，恢复的同时把stash内容也删了：
+
+同理，当开发一个新功能/模块时，最好新建一个分支feature，如果需要添加则合并，最后删除该feature分支
+如果要丢弃（没有被合并过的分支），可以通过git branch -D <name>强行删除
+
+x.多人协作
+推送
+$ git push origin master 将把该分支上的所有本地提交推送到远程库，如要推送其他分支如dev则git push origin dev
+并不是一定要把本地分支往远程推送，那么，哪些分支需要推送，哪些不需要呢？
+master分支是主分支，因此要时刻与远程同步；
+dev分支是开发分支，团队所有成员都需要在上面工作，所以也需要与远程同步；
+bug分支只用于在本地修复bug，就没必要推到远程了，除非老板要看看你每周到底修复了几个bug；
+feature分支是否推到远程，取决于你是否和你的小伙伴合作在上面开发
+
+抓取
+开发者（someone）远程库clone时，默认情况下只有master分支，
+要在dev分支上开发，就必须创建远程origin的dev分支到本地（git checkout -b dev origin/dev）,
+(然后在dev上继续修改，然后，时不时地把dev分支push到远程)，当你同样在dev上修改同样的文件，并试图push时则产生冲突，
+此时应先pull将最新的提交从origin/dev抓下来，然后，在本地合并，解决冲突，再推送
 
 
+因此，多人协作的工作模式通常是这样：
+首先，可以试图用git push origin branch-name推送自己的修改；
+如果推送失败，则因为远程分支比你的本地更新，需要先用git pull试图合并；
+如果合并有冲突，则解决冲突，并在本地提交；
+没有冲突或者解决掉冲突后，再用git push origin branch-name推送就能成功！
+（如果git pull提示“no tracking information”，则说明本地分支和远程分支的链接关系没有创建，
+用命令git branch --set-upstream branch-name origin/branch-name）
 
+x.标签tag
+发布一个版本时，我们通常先在版本库中打一个标签（tag），这样，就唯一确定了打标签时刻的版本。
+将来无论什么时候，取某个标签的版本，就是把那个打标签的时刻的历史版本取出来。所以，标签也是版本库的一个快照。
+Git的标签虽然是版本库的快照，但其实它就是指向某个commit的指针（跟分支很像，但是分支可以移动，标签不能移动）
+打标签：先切换到要打标签的分支上，然后
+git tag <tagname> 默认是打在最新提交的commit
+git tag <tagname> <commitid> 指定commit id
+git tag -a <tagname> -m "<msg>" <commitid> 带标签名和说明并指定commit id
+查看所有tag： git tag ，查看某个tag ：git show <tagname>  
 
+x.忽略特殊文件
+有时候必须把某些文件放到Git工作目录中，但又不能提交它们，比如保存了数据库密码的配置文件等，
+每次git status都会显示Untracked files ...。此时可以使用忽略，
+在Git工作区的根目录下创建一个特殊的.gitignore文件（windows 下 .gitignore.），然后把要忽略的文件名填进去，
+Git就会自动忽略这些文件(.gitignore文件本身要add放到版本库里)
 
+(有时候，添加文件失败（例如$ git add App.class），原因可能是是这个文件被.gitignore忽略了：
+如果确实想添加该文件，可以用-f强制添加到Git：$ git add -f <filename>
+或者你发现，可能是.gitignore写得有问题，需要找出来到底哪个规则写错了，可以用git check-ignore 命令检查：
+($ git check-ignore -v App.class)
 
-
-
-
-
+x.配置别名
+git config --global alias.newname originname
+例如1. $ git config --global alias.ci commit
+2.$ git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset 
+-%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
